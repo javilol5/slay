@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WebSocket</title>
+</head>
+<body>
+
+<button onclick="enviar()">Enviar jugada</button>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+<script>
+    let socket = new SockJS("http://localhost:8080/ws");
+    let stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+        console.log("Conectado");
+
+        stompClient.subscribe("/topic/game", function (message) {
+            console.log("Servidor:", message.body);
+        });
+    });
+
+    function enviar() {
+        stompClient.send("/app/play", {}, "Carta jugada");
+    }
+</script>
+
+</body>
+</html>
