@@ -1,31 +1,161 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test WebSocket</title>
+    <meta charset="UTF-8">
+    <title>Here to Slay</title>
+
+    <!-- WebSocket libs -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #2c2c2c;
+            color: white;
+            text-align: center;
+        }
+
+        #board {
+            border: 2px solid white;
+            margin: 20px;
+            padding: 20px;
+            min-height: 150px;
+            position: relative;
+            height: 400px;
+        }
+
+        .card {
+            position: absolute;
+            cursor: grab;
+        }
+
+        #hand {
+            border: 2px solid yellow;
+            margin: 20px;
+            padding: 20px;
+            min-height: 150px;
+        }
+
+        .card {
+            display: inline-block;
+            border: 1px solid white;
+            padding: 10px;
+            margin: 5px;
+            background: #444;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
 </head>
+
 <body>
 
-<button onclick="enviar()">Enviar jugada</button>
-<input type="checkbox" id="cbox" value="check" />
+<h1>Here To Slay</h1>
 
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<button onclick="drawCard()">Robar carta</button>
+
+<h2>Tablero (público)</h2>
+<div id="board"></div>
+
+<h2>Tu mano (privada)</h2>
+<div id="hand"></div>
 
 <script>
-    let socket = new SockJS("http://localhost:8080/ws");
-    let stompClient = Stomp.over(socket);
+    let stompClient = null;
 
-    stompClient.connect({}, function () {
-        console.log("Conectado");
+    // ⚠️ luego lo haremos dinámico
+    let playerId = "player" + Math.floor(Math.random() * 1000);
 
-        stompClient.subscribe("/topic/game", function (message) {
-            console.log("Servidor:", message.body);
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+
+            console.log("Conectado como:", playerId);
+
+            // 🔴 Estado público
+            stompClient.subscribe('/topic/game', function (msg) {
+                const game = JSON.parse(msg.body);
+                renderBoard(game);
+            });
+
+            // 🔴 Mano privada
+            stompClient.subscribe('/user/queue/hand', function (msg) {
+                const hand = JSON.parse(msg.body);
+                renderHand(hand);
+            });
+
         });
+    }
+
+    function drawCard() {
+        stompClient.send("/app/draw", {}, playerId);
+    }
+
+    // 🟦 Render tablero
+
+   player.board.forEach(card => {
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+        cardDiv.innerText = card.name;
+
+        cardDiv.style.left = card.x + "px";
+        cardDiv.style.top = card.y + "px";
+
+        // SOLO tu tablero permite mover
+        if (id === playerId) {
+
+            cardDiv.draggable = true;
+
+            cardDiv.ondragstart = (e) => {
+                e.dataTransfer.setData("cardId", card.id);
+            };
+
+            cardDiv.ondragend = (e) => {
+                const rect = boardDiv.getBoundingClientRect();
+
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                stompClient.send("/app/move", {}, JSON.stringify({
+                    playerId: playerId,
+                    cardId: card.id,
+                    x: x,
+                    y: y
+                }));
+            };
+        }
+
+        playerDiv.appendChild(cardDiv);
     });
 
-    function enviar() {
-        stompClient.send("/app/play", {}, "Carta jugada");
+
+
+
+
+
+    // 🟨 Render mano
+    function renderHand(hand) {
+        const handDiv = document.getElementById("hand");
+        handDiv.innerHTML = "";
+
+        hand.forEach(card => {
+            const cardDiv = document.createElement("div");
+            cardDiv.className = "card";
+            cardDiv.innerText = card.name;
+            cardDiv.draggable = true;
+            cardDiv.ondragstart = (e) => {
+                e.dataTransfer.setData("cardId", card.id);
+            handDiv.appendChild(cardDiv);
+        });
     }
+
+    connect();
 </script>
 
 </body>
