@@ -108,40 +108,47 @@
     }
 
     // 🟦 Render tablero
-   player.board.forEach(card => {
-        const cardDiv = document.createElement("div");
-        cardDiv.className = "card";
-        cardDiv.innerHTML = "<img src='" + card.image + "' width='80'>";
 
-        cardDiv.style.left = card.x + "px";
-        cardDiv.style.top = card.y + "px";
+    function rederBoard(game) {
+        const boardDiv = document.getElementById("board");
+        boardDiv.innerHTML = "";
 
-        // SOLO tu tablero permite mover
-        if (id === playerId) {
+        game.players.forEach(player => {
+            player.board.forEach(card => {
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "card";
+                cardDiv.innerHTML = "<img src='" + card.image + "' width='80'>";
 
-            cardDiv.draggable = true;
+                cardDiv.style.left = card.x + "px";
+                cardDiv.style.top = card.y + "px";
 
-            cardDiv.ondragstart = (e) => {
-                e.dataTransfer.setData("cardId", card.id);
-            };
+                // SOLO tu tablero permite mover
+                if (id === playerId) {
 
-            cardDiv.ondragend = (e) => {
-                const rect = playerDiv.getBoundingClientRect();
+                cardDiv.draggable = true;
 
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+                cardDiv.ondragstart = (e) => {
+                    e.dataTransfer.setData("cardId", card.id);
+                };
 
-                stompClient.send("/app/move", {}, JSON.stringify({
-                    playerId: playerId,
-                    cardId: card.id,
-                    x: x,
-                    y: y
-                }));
-            };
-        }
+                cardDiv.ondragend = (e) => {
+                    const rect = playerDiv.getBoundingClientRect();
 
-        playerDiv.appendChild(cardDiv);
-   });
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    stompClient.send("/app/move", {}, JSON.stringify({
+                        playerId: playerId,
+                        cardId: card.id,
+                        x: x,
+                        y: y
+                    }));
+                };
+            }
+
+            boardDiv.appendChild(cardDiv);
+        });
+    });
 
 
 
