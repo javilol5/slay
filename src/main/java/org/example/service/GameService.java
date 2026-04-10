@@ -1,27 +1,47 @@
 package org.example.service;
 
 import org.example.model.*;
+import org.example.model.Card;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
 
 @Service
 public class GameService {
 
     private GameState game = new GameState();
 
+    public GameService() {
+        // Crear mazo de prueba
+        for (int i = 0; i < 20; i++) {
+            Card c = new Card();
+            c.id = "card-" + i;
+            c.name = "Carta " + i;
+            c.image = "/img/carta" + (i % 5) + ".png";
+            game.deck.add(c);
+        }
+    }
+
     public GameState getGame() {
         return game;
     }
 
-    public Card drawCard(String playerId) {
-        if (game.deck.isEmpty()) return null;
+    public void ensurePlayer(String playerId) {
+        game.players.putIfAbsent(playerId, new Player());
+    }
+
+    public void drawCard(String playerId) {
+        ensurePlayer(playerId);
+
+        if (game.deck.isEmpty()) return;
 
         Card card = game.deck.remove(0);
         game.players.get(playerId).hand.add(card);
-
-        return card;
     }
 
     public void playCard(String playerId, String cardId) {
+        ensurePlayer(playerId);
+
         Player player = game.players.get(playerId);
 
         Card selected = null;
@@ -35,6 +55,11 @@ public class GameService {
 
         if (selected != null) {
             player.hand.remove(selected);
+
+            // posición inicial
+            selected.x = 100;
+            selected.y = 100;
+
             player.board.add(selected);
         }
     }
@@ -50,4 +75,6 @@ public class GameService {
             }
         }
     }
+
+
 }

@@ -1,19 +1,12 @@
 package org.example.model;
 
 public class Card {
-    public String imagePath;
+
+    public String image;
     public String name;
+    public String id;
 
-    public Card(String name, String imagePath) {
-        this.name = name;
-        this.imagePath = imagePath;
-    }
+    public int x;
+    public int y;
 
-    public String getName() {
-        return name;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
 }
