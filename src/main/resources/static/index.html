@@ -72,8 +72,6 @@
 
 <script>
     let stompClient = null;
-
-    // ⚠️ luego lo haremos dinámico
     let playerId = "player" + Math.floor(Math.random() * 1000);
 
     function connect() {
@@ -84,16 +82,12 @@
 
             console.log("Conectado como:", playerId);
 
-            // 🔴 Estado público
             stompClient.subscribe('/topic/game', function (msg) {
-                console.log("GAME recibido:", (msg.body));
-                const game = JSON.parse(msg.body);
-                renderBoard(game);
+                console.log("GAME:", msg.body);
             });
 
-            // 🔴 Mano privada
             stompClient.subscribe('/user/queue/hand', function (msg) {
-                console.log("🖐️ HAND recibida:", (msg.body));
+                console.log("HAND:", msg.body);
                 const hand = JSON.parse(msg.body);
                 renderHand(hand);
             });
@@ -101,75 +95,20 @@
         });
     }
 
+    // ✅ IMPORTANTE: FUNCIÓN GLOBAL
     function drawCard() {
         console.log("CLICK en robar carta");
-        console.log("Player ID:", playerId);
         stompClient.send("/app/draw", {}, playerId);
     }
 
-    // 🟦 Render tablero
-
-    function rederBoard(game) {
-        const boardDiv = document.getElementById("board");
-        boardDiv.innerHTML = "";
-
-        game.players.forEach(player => {
-            player.board.forEach(card => {
-                const cardDiv = document.createElement("div");
-                cardDiv.className = "card";
-                cardDiv.innerHTML = "<img src='" + card.image + "' width='80'>";
-
-                cardDiv.style.left = card.x + "px";
-                cardDiv.style.top = card.y + "px";
-
-                // SOLO tu tablero permite mover
-                if (id === playerId) {
-
-                cardDiv.draggable = true;
-
-                cardDiv.ondragstart = (e) => {
-                    e.dataTransfer.setData("cardId", card.id);
-                };
-
-                cardDiv.ondragend = (e) => {
-                    const rect = playerDiv.getBoundingClientRect();
-
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    stompClient.send("/app/move", {}, JSON.stringify({
-                        playerId: playerId,
-                        cardId: card.id,
-                        x: x,
-                        y: y
-                    }));
-                };
-            }
-
-            boardDiv.appendChild(cardDiv);
-        });
-    });
-
-
-
-
-
-
-    // 🟨 Render mano
     function renderHand(hand) {
-        console.log("Renderizando mano:", hand);
         const handDiv = document.getElementById("hand");
         handDiv.innerHTML = "";
 
         hand.forEach(card => {
-            console.log("Carta:", card);
-            const cardDiv = document.createElement("div");
-            cardDiv.className = "card";
-            cardDiv.innerHTML = "<img src='" + card.image + "' width='80'>";
-            cardDiv.draggable = true;
-            cardDiv.ondragstart = (e) => {
-                e.dataTransfer.setData("cardId", card.id);
-            handDiv.appendChild(cardDiv);
+            const div = document.createElement("div");
+            div.innerText = card.name;
+            handDiv.appendChild(div);
         });
     }
 

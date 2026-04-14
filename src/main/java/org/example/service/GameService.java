@@ -1,7 +1,6 @@
 package org.example.service;
 
 import org.example.model.*;
-import org.example.model.Card;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -31,11 +30,18 @@ public class GameService {
     }
 
     public void drawCard(String playerId) {
+
         ensurePlayer(playerId);
 
-        if (game.deck.isEmpty()) return;
+        if (game.deck.isEmpty()) {
+            System.out.println("Mazo vacío");
+            return;
+        }
 
         Card card = game.deck.remove(0);
+
+        System.out.println("Jugador " + playerId + " roba: " + card.name);
+
         game.players.get(playerId).hand.add(card);
     }
 
@@ -61,11 +67,14 @@ public class GameService {
             selected.y = 100;
 
             player.board.add(selected);
+            System.out.println("Carta jugada: " + selected.name);
         }
     }
 
     public void moveCard(String playerId, String cardId, int x, int y) {
         Player player = game.players.get(playerId);
+
+        if (player == null) return;
 
         for (Card c : player.board) {
             if (c.id.equals(cardId)) {

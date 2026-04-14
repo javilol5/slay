@@ -24,7 +24,7 @@ public class GameController {
     public GameState draw(@Payload String playerId) {
 
         gameService.drawCard(playerId);
-
+        System.out.println("DRAW recibido de: " + playerId);
         // enviar mano SOLO al jugador
         messagingTemplate.convertAndSendToUser(
                 playerId,
